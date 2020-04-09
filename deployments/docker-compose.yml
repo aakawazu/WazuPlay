@@ -1,0 +1,18 @@
+version: "3.7"
+services:
+    oauth-server:
+        build:
+            context: ../cmd/.
+            dockerfile: ../build/package/oauth-server/Dockerfile
+    api-server:
+        build:
+            context: ../cmd/.
+            dockerfile: ../build/package/api-server/Dockerfile
+    resource-server:
+        build:
+            context: ../cmd/.
+            dockerfile: ../build/package/resource-server/Dockerfile
+    player-frontend:
+        build:
+            context: ../cmd/.
+            dockerfile: ../build/package/oauth-server/Dockerfile
