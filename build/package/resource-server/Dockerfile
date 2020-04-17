@@ -1,9 +1,8 @@
 FROM golang:1.14
 
 WORKDIR /go/src/app
-COPY ./resource-server/. .
+COPY . .
 
-RUN go get -d -v ./...
-RUN go install -v ./...
+RUN go build ./cmd/resource-server/main.go
 
-CMD ["go", "run", "/go/src/app/."]
+CMD ["./main"]
