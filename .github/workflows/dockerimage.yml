@@ -14,5 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: generate .env
+      run: echo $DBPASSWORD > .env
     - name: Build the Docker image
       run: docker-compose -f ./deployments/docker-compose.yml build
