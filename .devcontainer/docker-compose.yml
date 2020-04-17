@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+    db:
+        image: postgres:12.2-alpine
+        restart: always
+        environment:
+            POSTGRES_USER: wazuplay
+            POSTGRES_PASSWORD: test
+    dev:
+        build:
+            context: .
+            dockerfile: ./dev.Dockerfile
+        volumes: 
+            - ../.:/workspace/.
+        tty: true
