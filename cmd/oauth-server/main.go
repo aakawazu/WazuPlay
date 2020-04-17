@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"net/http"
+
+	oauthServer "github.com/aakawazu/WazuPlay/internal/oauth-server/router"
+)
 
 func main() {
-	fmt.Println("Hello, 世界")
+	router := oauthServer.NewRouter()
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
