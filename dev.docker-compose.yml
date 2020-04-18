@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+    db:
+        image: postgres:12.2-alpine
+        restart: always
+        environment:
+            POSTGRES_USER: wazuplay
+            POSTGRES_PASSWORD: test
+    dev:
+        build:
+            context: ./.devcontainer/
+            dockerfile: ./Dockerfile
+        tty: true
+    pgweb:
+        image: sosedoff/pgweb
+        ports:
+            - "8081:8081"
