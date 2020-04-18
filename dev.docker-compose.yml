@@ -11,6 +11,8 @@ services:
             context: ./.devcontainer/
             dockerfile: ./Dockerfile
         tty: true
+        volumes:
+            - .:/workspace:cached
     pgweb:
         image: sosedoff/pgweb
         ports:
