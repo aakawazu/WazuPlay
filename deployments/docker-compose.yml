@@ -6,6 +6,8 @@ services:
         environment:
             POSTGRES_USER: wazuplay
             POSTGRES_PASSWORD: ${DBPASSWORD}
+        volumes:
+            - ./init/initdb/:/docker-entrypoint-initdb.d
     oauth-server:
         build:
             context: ../.
