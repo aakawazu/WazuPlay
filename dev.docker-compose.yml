@@ -1,13 +1,5 @@
 version: "3.7"
 services:
-    db:
-        image: postgres:12.2-alpine
-        restart: always
-        environment:
-            POSTGRES_USER: wazuplay
-            POSTGRES_PASSWORD: test
-        volumes:
-            - ./init/initdb/:/docker-entrypoint-initdb.d/
     dev:
         build:
             context: ./.devcontainer/
