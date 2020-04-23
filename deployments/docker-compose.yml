@@ -1,14 +1,27 @@
 version: "3.7"
 services:
+    nginx-proxy:
+        image: jwilder/nginx-proxy
+        ports:
+          - "80:80"
+        volumes:
+          - /var/run/docker.sock:/tmp/docker.sock:ro
     db:
         image: postgres:12.2-alpine
         restart: always
         environment:
             POSTGRES_USER: wazuplay
-            POSTGRES_PASSWORD: ${DBPASSWORD}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
         volumes:
             - ./init/initdb/:/docker-entrypoint-initdb.d
+    mail:
+        image: catatnight/postfix
+        environment: 
+            maildomain: ${HOSTNAME}
+            smtp_user: wazuplay:${SMTP_PASSWORD}
     oauth-server:
         build:
             context: ../.
             dockerfile: ./build/package/oauth-server/Dockerfile
+        environment: 
+            VIRTUAL_HOST: oauth.${HOSTNAME}
