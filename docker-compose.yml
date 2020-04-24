@@ -21,7 +21,7 @@ services:
             smtp_user: wazuplay:${SMTP_PASSWORD}
     oauth-server:
         build:
-            context: ../.
+            context: ./
             dockerfile: ./build/package/oauth-server/Dockerfile
         environment: 
             VIRTUAL_HOST: oauth.${HOSTNAME}
