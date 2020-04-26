@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"fmt"
 
 	oauthServer "github.com/aakawazu/WazuPlay/internal/oauth-server/router"
 	"github.com/joho/godotenv"
@@ -15,6 +15,6 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	router := oauthServer.NewRouter()
-	fmt.Println("http://127.0.0.1:8080")
+	fmt.Println("hello")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
