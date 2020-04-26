@@ -12,10 +12,12 @@ func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/", Index)
 	router.HandleFunc("/token", TokenEndpoint)
+	router.HandleFunc("/verificationcode", GenerateVerificationCode)
+	router.HandleFunc("/confirm", ConfirmVerificationCode)
 	return router
 }
 
-// Index index
+//Index index
 func Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, World")
+	fmt.Fprintf(w, "Hello, OAuth")
 }
