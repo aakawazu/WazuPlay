@@ -2,7 +2,9 @@ package router
 
 import (
 	"net/http"
-	// db "github.com/aakawazu/WazuPlay/pkg/db"
+
+	db "github.com/aakawazu/WazuPlay/pkg/db"
+	httpStates "github.com/aakawazu/WazuPlay/pkg/http_states"
 )
 
 // TokenResponse token response structure
@@ -17,13 +19,14 @@ type TokenResponse struct {
 func TokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+		username := db.EscapeSinglequotation(r.FormValue("username"))
+		password := db.EscapeSinglequotation(r.FormValue("password"))
 		if len(username) == 0 || len(password) == 0 {
-			w.WriteHeader(400)
-			w.Write([]byte("400 - username and password required"))
+			httpStates.BadRequest(&w)
 		} else {
 
 		}
+	} else {
+		httpStates.MethodNotAllowed(&w)
 	}
 }
