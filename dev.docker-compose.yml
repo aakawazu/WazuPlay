@@ -1,23 +1,14 @@
 version: "3.7"
 services:
-    dev-go:
+    dev:
         build:
-            context: ./.devcontainer/
-            dockerfile: ./Dockerfile-go
+            context: ./.devcontainer
+            dockerfile: ./Dockerfile
         tty: true
         volumes:
             - .:/workspace:cached
         ports:
             - "8080:8080"
-    dev-node:
-        build:
-            context: ./.devcontainer/
-            dockerfile: ./Dockerfile-node
-        tty: true
-        volumes:
-            - ./web/player-frontend:/workspace:cached
-        ports:
-            - "3000:3000"
     pgweb:
         image: sosedoff/pgweb
         ports:
