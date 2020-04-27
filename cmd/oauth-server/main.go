@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"fmt"
 
 	oauthServer "github.com/aakawazu/WazuPlay/internal/oauth-server/router"
 	"github.com/joho/godotenv"
