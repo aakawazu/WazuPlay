@@ -1,0 +1,3 @@
+[submodule "web/player-frontend"]
+	path = web/player-frontend
+	url = git@github.com:aakawazu/WazuPlay-web.git
