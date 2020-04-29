@@ -15,6 +15,6 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	router := oauthServer.NewRouter()
-	fmt.Println("hello")
+	fmt.Println("hello, OAuth")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
