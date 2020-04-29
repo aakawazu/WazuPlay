@@ -14,6 +14,7 @@ func NewRouter() *mux.Router {
 	router.HandleFunc("/token", TokenEndpoint)
 	router.HandleFunc("/verificationcode", GenerateVerificationCode)
 	router.HandleFunc("/confirm", ConfirmVerificationCode)
+	router.HandleFunc("/signup", SignUp)
 	return router
 }
 
