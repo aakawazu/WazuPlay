@@ -1,9 +1,7 @@
 create table users (
+    id                          text,
     username                    text,
-    pass                        text,
-    access_token                text,
-    access_token_expiration     timestamp,
-    refresh_token               text,
-    refresh_token_expiration    timestamp,
+    mail_address                text,
+    hashed_password             text,
     profile_picture_url         text
 )
