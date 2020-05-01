@@ -17,7 +17,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// FindMailAddressDuplicate find mailaddress duplicate
 func findMailAddressDuplicate(w *http.ResponseWriter, mailAddress string) bool {
 	sqlStatement := fmt.Sprintf(
 		"SELECT * FROM users WHERE mail_address = '%s'",
