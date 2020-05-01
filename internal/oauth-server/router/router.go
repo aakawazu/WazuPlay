@@ -12,8 +12,8 @@ func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/", Index)
 	router.HandleFunc("/token", TokenEndpoint)
-	router.HandleFunc("/verificationcode", GenerateVerificationCode)
-	router.HandleFunc("/confirm", ConfirmVerificationCode)
+	router.HandleFunc("/verificationcode/generate", GenerateVerificationCode)
+	router.HandleFunc("/verificationcode/confirm", ConfirmVerificationCode)
 	router.HandleFunc("/signup", SignUp)
 	return router
 }
