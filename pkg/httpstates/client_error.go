@@ -1,4 +1,4 @@
-package statescode
+package httpstates
 
 import "net/http"
 

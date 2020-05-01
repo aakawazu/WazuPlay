@@ -1,4 +1,4 @@
-package userdata
+package random
 
 import (
 	"fmt"
