@@ -9,67 +9,105 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	db "github.com/aakawazu/WazuPlay/pkg/db"
-	httpStates "github.com/aakawazu/WazuPlay/pkg/http_states"
-	mail "github.com/aakawazu/WazuPlay/pkg/mail"
+	"github.com/aakawazu/WazuPlay/pkg/checkerr"
+	"github.com/aakawazu/WazuPlay/pkg/db"
+	"github.com/aakawazu/WazuPlay/pkg/httpstates"
+	"github.com/aakawazu/WazuPlay/pkg/mail"
+	"github.com/aakawazu/WazuPlay/pkg/random"
 	"github.com/go-playground/validator/v10"
 )
+
+// FindMailAddressDuplicate find mailaddress duplicate
+func findMailAddressDuplicate(w *http.ResponseWriter, mailAddress string) bool {
+	sqlStatement := fmt.Sprintf(
+		"SELECT * FROM users WHERE mail_address = '%s'",
+		mailAddress,
+	)
+	rows, err := db.RunSQL(sqlStatement)
+	defer rows.Close()
+	if checkerr.InternalServerError(err, w) {
+		return true
+	}
+	if !rows.Next() {
+		httpstates.BadRequest(w)
+		return true
+	}
+	return false
+}
+
+func findVerificationCode(w *http.ResponseWriter, mailAddress string, verificationCode int) bool {
+	sqlStatement := fmt.Sprintf(
+		"SELECT * FROM pending WHERE mail_address = '%s' and verification_code = %d and expiration > '%s'",
+		mailAddress, verificationCode, db.TimeNow(0),
+	)
+	rows, err := db.RunSQL(sqlStatement)
+	defer rows.Close()
+	if checkerr.InternalServerError(err, w) {
+		return false
+	}
+	if !rows.Next() {
+		httpstates.BadRequest(w)
+		return false
+	}
+	return true
+}
 
 // GenerateVerificationCode generate verification
 func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
+		rand.Seed(time.Now().UnixNano())
+		r.ParseForm()
+		mailAddress := db.EscapeSinglequotation(r.FormValue("mail_address"))
+		verificationCode := rand.Intn(999999)
+		expiration := db.TimeNow(15)
+
 		type Request struct {
 			MailAddress string `validate:"required,email"`
 		}
-		rand.Seed(time.Now().UnixNano())
-		r.ParseForm()
-		mailAddress := r.FormValue("mail_address")
-		verificationCode := rand.Intn(999999)
-		expiration := db.TimeNow(15)
 		req := &Request{
 			MailAddress: mailAddress,
 		}
 		validate := validator.New()
-		if err := validate.Struct(req); err != nil {
-			httpStates.BadRequest(&w)
+		if err := validate.Struct(req); checkerr.BadRequest(err, &w) {
 			return
 		}
-		mailAddress = db.EscapeSinglequotation(mailAddress)
+
+		if findMailAddressDuplicate(&w, mailAddress) {
+			return
+		}
+
 		sqlStatement := fmt.Sprintf(
 			"DELETE FROM pending WHERE mail_address = '%s'",
 			mailAddress,
 		)
-		_, err := db.RunSQL(sqlStatement)
-		if err != nil {
-			httpStates.InternalServerError(&w)
+		if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(err, &w) {
 			return
 		}
+
 		sqlStatement = fmt.Sprintf(
 			"INSERT INTO pending (mail_address, verification_code, expiration) VALUES('%s', %d, '%s')",
 			mailAddress, verificationCode, expiration,
 		)
-		if _, err := db.RunSQL(sqlStatement); err != nil {
-			httpStates.InternalServerError(&w)
+		if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(err, &w) {
 			return
 		}
+
 		msg := fmt.Sprintf(
 			"アカウントを作成するには15分以内に確認コードを入力してください \r\n <h1>%d</h1> \r\n",
 			verificationCode,
 		)
-		subject := fmt.Sprintf("確認コード: %d", verificationCode)
 		m := mail.Mail{
 			From:    "noreply@wazuplay.online",
 			To:      mailAddress,
-			Subject: subject,
+			Subject: fmt.Sprintf("確認コード: %d", verificationCode),
 			Text:    msg,
 		}
-		if err := mail.Send(m); err != nil {
-			httpStates.InternalServerError(&w)
+		if err := mail.Send(m); checkerr.InternalServerError(err, &w) {
 			return
 		}
-		httpStates.OK(&w)
+		httpstates.OK(&w)
 	} else {
-		httpStates.MethodNotAllowed(&w)
+		httpstates.MethodNotAllowed(&w)
 	}
 }
 
@@ -77,12 +115,12 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
-		mailAddress := r.FormValue("mail_address")
+		mailAddress := db.EscapeSinglequotation(r.FormValue("mail_address"))
 		verificationCode, err := strconv.Atoi(r.FormValue("verification_code"))
-		if err != nil {
-			httpStates.InternalServerError(&w)
+		if checkerr.InternalServerError(err, &w) {
 			return
 		}
+
 		type Request struct {
 			MailAddress      string `validate:"required,email"`
 			VerificationCode int    `validate:"gte=0,lt=999999"`
@@ -92,28 +130,17 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 			VerificationCode: verificationCode,
 		}
 		validate := validator.New()
-		if err := validate.Struct(req); err != nil {
-			httpStates.BadRequest(&w)
+		if err := validate.Struct(req); checkerr.BadRequest(err, &w) {
 			return
 		}
-		mailAddress = db.EscapeSinglequotation(mailAddress)
-		sqlStatement := fmt.Sprintf(
-			"SELECT * FROM pending WHERE mail_address = '%s' and verification_code = %d and expiration > '%s'",
-			mailAddress, verificationCode, db.TimeNow(0),
-		)
-		rows, err := db.RunSQL(sqlStatement)
-		defer rows.Close()
-		if err != nil {
-			httpStates.InternalServerError(&w)
+
+		if !findVerificationCode(&w, mailAddress, verificationCode) {
 			return
 		}
-		if !rows.Next() {
-			httpStates.BadRequest(&w)
-			return
-		}
-		httpStates.OK(&w)
+
+		httpstates.OK(&w)
 	} else {
-		httpStates.MethodNotAllowed(&w)
+		httpstates.MethodNotAllowed(&w)
 	}
 }
 
@@ -121,14 +148,14 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
-		mailAddress := r.FormValue("mail_address")
+		mailAddress := db.EscapeSinglequotation(r.FormValue("mail_address"))
 		verificationCode, err := strconv.Atoi(r.FormValue("verification_code"))
-		if err != nil {
-			httpStates.InternalServerError(&w)
+		if checkerr.InternalServerError(err, &w) {
 			return
 		}
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+		username := db.EscapeSinglequotation(r.FormValue("username"))
+		password := db.EscapeSinglequotation(r.FormValue("password"))
+
 		type Request struct {
 			MailAddress      string `validate:"required,email"`
 			VerificationCode int    `validate:"gte=0,lt=999999"`
@@ -142,43 +169,34 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			Password:         password,
 		}
 		validate := validator.New()
-		if err := validate.Struct(req); err != nil {
-			httpStates.BadRequest(&w)
+		if err := validate.Struct(req); checkerr.BadRequest(err, &w) {
 			return
 		}
-		mailAddress = db.EscapeSinglequotation(mailAddress)
-		username = db.EscapeSinglequotation(username)
-		password = db.EscapeSinglequotation(password)
-		sqlStatement := fmt.Sprintf(
-			"SELECT * FROM pending WHERE mail_address = '%s' and verification_code = %d and expiration > '%s'",
-			mailAddress, verificationCode, db.TimeNow(0),
-		)
-		rows, err := db.RunSQL(sqlStatement)
-		defer rows.Close()
-		if err != nil {
-			httpStates.InternalServerError(&w)
+
+		if !findVerificationCode(&w, mailAddress, verificationCode) {
 			return
 		}
-		if !rows.Next() {
-			httpStates.BadRequest(&w)
+
+		if findMailAddressDuplicate(&w, mailAddress) {
 			return
 		}
+
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			httpStates.InternalServerError(&w)
+		if checkerr.InternalServerError(err, &w) {
 			return
 		}
-		sqlStatement = fmt.Sprintf(
-			"INSERT INTO users (username, mail_address, hashed_password) VALUES('%s', '%s', '%s')",
-			username, mailAddress, hashedPassword,
+		id, err := random.GenerateRandomString()
+		sqlStatement := fmt.Sprintf(
+			"INSERT INTO users (id, username, mail_address, hashed_password) VALUES('%s', '%s', '%s', '%s')",
+			id, username, mailAddress, hashedPassword,
 		)
 		if _, err := db.RunSQL(sqlStatement); err != nil {
-			fmt.Println(err)
-			httpStates.InternalServerError(&w)
+			httpstates.InternalServerError(&w)
 			return
 		}
-		httpStates.OK(&w)
+
+		httpstates.OK(&w)
 	} else {
-		httpStates.MethodNotAllowed(&w)
+		httpstates.MethodNotAllowed(&w)
 	}
 }
