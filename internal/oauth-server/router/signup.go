@@ -185,6 +185,10 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		id, err := random.GenerateRandomString()
+		if checkerr.InternalServerError(err) {
+			return
+		}
+
 		sqlStatement := fmt.Sprintf(
 			"INSERT INTO users (id, username, mail_address, hashed_password) VALUES('%s', '%s', '%s', '%s')",
 			id, username, mailAddress, hashedPassword,
