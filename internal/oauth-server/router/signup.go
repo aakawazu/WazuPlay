@@ -185,7 +185,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		id, err := random.GenerateRandomString()
-		if checkerr.InternalServerError(err) {
+		if checkerr.InternalServerError(err, &w) {
 			return
 		}
 
