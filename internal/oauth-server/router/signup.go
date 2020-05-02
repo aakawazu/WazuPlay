@@ -27,7 +27,7 @@ func findMailAddressDuplicate(w *http.ResponseWriter, mailAddress string) bool {
 	if checkerr.InternalServerError(err, w) {
 		return true
 	}
-	if !rows.Next() {
+	if rows.Next() {
 		httpstates.BadRequest(w)
 		return true
 	}
@@ -51,7 +51,7 @@ func findVerificationCode(w *http.ResponseWriter, mailAddress string, verificati
 	return true
 }
 
-// GenerateVerificationCode generate verification
+// GenerateVerificationCode /verificationcode/generate
 func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		rand.Seed(time.Now().UnixNano())
@@ -60,10 +60,10 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 		verificationCode := rand.Intn(999999)
 		expiration := db.TimeNow(15)
 
-		type Request struct {
+		type request struct {
 			MailAddress string `validate:"required,email"`
 		}
-		req := &Request{
+		req := &request{
 			MailAddress: mailAddress,
 		}
 		validate := validator.New()
@@ -110,7 +110,7 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ConfirmVerificationCode Check the verification code
+// ConfirmVerificationCode /verificationcode/confirm
 func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
@@ -120,11 +120,11 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		type Request struct {
+		type request struct {
 			MailAddress      string `validate:"required,email"`
 			VerificationCode int    `validate:"gte=0,lt=999999"`
 		}
-		req := &Request{
+		req := &request{
 			MailAddress:      mailAddress,
 			VerificationCode: verificationCode,
 		}
@@ -143,7 +143,7 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// SignUp sign up
+// SignUp /signup
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
@@ -155,13 +155,13 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		username := db.EscapeSinglequotation(r.FormValue("username"))
 		password := db.EscapeSinglequotation(r.FormValue("password"))
 
-		type Request struct {
+		type request struct {
 			MailAddress      string `validate:"required,email"`
-			VerificationCode int    `validate:"gte=0,lt=999999"`
+			VerificationCode int    `validate:"min=1,max=999999"`
 			Username         string `validate:"required"`
-			Password         string `validate:"required"`
+			Password         string `validate:"required,min=5,max=50"`
 		}
-		req := &Request{
+		req := &request{
 			MailAddress:      mailAddress,
 			VerificationCode: verificationCode,
 			Username:         username,
