@@ -55,6 +55,7 @@ func findVerificationCode(w *http.ResponseWriter, mailAddress string, verificati
 func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpstates.MethodNotAllowed(&w)
+		return
 	}
 	rand.Seed(time.Now().UnixNano())
 	r.ParseForm()
@@ -113,6 +114,7 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpstates.MethodNotAllowed(&w)
+		return
 	}
 	r.ParseForm()
 	mailAddress := db.EscapeSinglequotation(r.FormValue("mail_address"))
@@ -145,6 +147,7 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpstates.MethodNotAllowed(&w)
+		return
 	}
 	r.ParseForm()
 	mailAddress := db.EscapeSinglequotation(r.FormValue("mail_address"))
