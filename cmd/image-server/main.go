@@ -50,6 +50,8 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	initLeveldb()
+
 	router := imageServer.NewRouter()
 	fmt.Println("hello, Image")
 	log.Fatal(http.ListenAndServe(":8080", router))
