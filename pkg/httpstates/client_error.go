@@ -6,12 +6,12 @@ import "net/http"
 func BadRequest(wa *http.ResponseWriter) {
 	w := *wa
 	w.WriteHeader(400)
-	w.Write([]byte("400 - Bad Request"))
+	w.Write([]byte("400 bad request"))
 }
 
 // MethodNotAllowed return 405
 func MethodNotAllowed(wa *http.ResponseWriter) {
 	w := *wa
 	w.WriteHeader(405)
-	w.Write([]byte("405 - Method Not Allowed"))
+	w.Write([]byte("405 method not allowed"))
 }

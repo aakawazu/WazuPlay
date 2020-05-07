@@ -6,5 +6,5 @@ import "net/http"
 func InternalServerError(wa *http.ResponseWriter) {
 	w := *wa
 	w.WriteHeader(500)
-	w.Write([]byte("500 - Internal Server Error"))
+	w.Write([]byte("500 internal server error"))
 }

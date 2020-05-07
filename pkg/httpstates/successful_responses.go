@@ -6,5 +6,5 @@ import "net/http"
 func OK(wa *http.ResponseWriter) {
 	w := *wa
 	w.WriteHeader(200)
-	w.Write([]byte("200 - OK"))
+	w.Write([]byte("200 ok"))
 }
