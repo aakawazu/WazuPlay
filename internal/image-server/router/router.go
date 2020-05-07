@@ -11,6 +11,7 @@ import (
 func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/", Index)
+	router.HandleFunc("/upload", UploadImage)
 	return router
 }
 
