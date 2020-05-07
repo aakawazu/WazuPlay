@@ -15,30 +15,31 @@ import (
 func initLeveldb() {
 	db, err := leveldb.OpenFile("/wazuplay-files/images/leveldb/", nil)
 	if err != nil {
-		log.Fatal("Error loading leveldb")
+		log.Fatal(err)
 	}
 	defer db.Close()
 	_, err = db.Get([]byte("latest_folder"), nil)
 	if err != nil {
 		if err != leveldb.ErrNotFound {
-			log.Fatal("Error loading latest folder")
+			log.Fatal(err)
 		}
 
 		folderName, err := random.GenerateRandomString()
 		if err != nil {
-			log.Fatal("Error generating randomstring")
+			log.Fatal(err)
 		}
 
 		if err := db.Put([]byte("latest_folder"), []byte(folderName), nil); err != nil {
-			log.Fatal("Error generating randomstring")
+			log.Fatal(err)
 		}
+
 		if err := db.Put([]byte("filesin_latest_folder"), []byte("0"), nil); err != nil {
-			log.Fatal("Error generating randomstring")
+			log.Fatal(err)
 		}
 
 		err = os.MkdirAll(fmt.Sprintf("/wazuplay-files/images/files/%s", folderName), 0777)
 		if err != nil {
-			log.Fatal("Error making folder")
+			log.Fatal(err)
 		}
 	}
 }
