@@ -10,4 +10,7 @@ require (
 	github.com/lib/pq v1.3.0
 	golang.org/x/crypto v0.0.0-20200427165652-729f1e841bcc
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+	github.com/gabriel-vasile/mimetype v1.1.0
+	github.com/syndtr/goleveldb v1.0.0
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 )
