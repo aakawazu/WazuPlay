@@ -32,6 +32,9 @@ func initLeveldb() {
 		if err := db.Put([]byte("latest_folder"), []byte(folderName), nil); err != nil {
 			log.Fatal("Error generating randomstring")
 		}
+		if err := db.Put([]byte("filesin_latest_folder"), []byte("0"), nil); err != nil {
+			log.Fatal("Error generating randomstring")
+		}
 
 		err = os.MkdirAll(fmt.Sprintf("/wazuplay-files/images/files/%s", folderName), 0777)
 		if err != nil {
