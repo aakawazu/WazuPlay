@@ -39,7 +39,7 @@ func TokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		)
 		rows, err := db.RunSQL(sqlStatement)
 		defer rows.Close()
-		if checkerr.InternalServerError(err, &w) {
+		if checkerr.InternalServerError(&w, err) {
 			return
 		}
 		var id string
@@ -47,16 +47,16 @@ func TokenEndpoint(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			rows.Scan(&id, &hashedPassword)
 		}
-		if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); checkerr.BadRequest(err, &w) {
+		if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); checkerr.BadRequest(&w, err) {
 			return
 		}
 
 		accessToken, err := random.GenerateRandomString()
-		if checkerr.InternalServerError(err, &w) {
+		if checkerr.InternalServerError(&w, err) {
 			return
 		}
 		refreshToken, err := random.GenerateRandomString()
-		if checkerr.InternalServerError(err, &w) {
+		if checkerr.InternalServerError(&w, err) {
 			return
 		}
 		type response struct {
@@ -72,7 +72,7 @@ func TokenEndpoint(w http.ResponseWriter, r *http.Request) {
 			RefreshToken: refreshToken,
 		}
 		resjson, err := json.Marshal(res)
-		if checkerr.InternalServerError(err, &w) {
+		if checkerr.InternalServerError(&w, err) {
 			return
 		}
 
@@ -80,7 +80,7 @@ func TokenEndpoint(w http.ResponseWriter, r *http.Request) {
 			"INSERT INTO access_token (token, expiration, user_id) VALUES('%s', '%s', '%s')",
 			accessToken, db.TimeNow(60), id,
 		)
-		if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(err, &w) {
+		if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(&w, err) {
 			return
 		}
 
@@ -88,7 +88,7 @@ func TokenEndpoint(w http.ResponseWriter, r *http.Request) {
 			"INSERT INTO refresh_token (token, expiration, user_id) VALUES('%s', '%s', '%s')",
 			refreshToken, db.TimeNow(43200), id,
 		)
-		if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(err, &w) {
+		if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(&w, err) {
 			return
 		}
 

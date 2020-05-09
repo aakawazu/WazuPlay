@@ -98,7 +98,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", ImageFilesRoot), nil)
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 	defer db.Close()
@@ -106,12 +106,12 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(32 << 20)
 
 	formFile, _, err := r.FormFile("image")
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 	defer formFile.Close()
 
-	if checkImg, err := checkIfTheImage(formFile); checkerr.InternalServerError(err, &w) {
+	if checkImg, err := checkIfTheImage(formFile); checkerr.InternalServerError(&w, err) {
 		return
 	} else if !checkImg {
 		httpstates.BadRequest(&w)
@@ -119,31 +119,31 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileName, err := random.GenerateRandomString()
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 
 	folderName, err := db.Get([]byte("latest_folder"), nil)
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 
-	if files, err := numberOfFiles(string(folderName)); checkerr.InternalServerError(err, &w) {
+	if files, err := numberOfFiles(string(folderName)); checkerr.InternalServerError(&w, err) {
 		return
 	} else if files > 50000 {
 		CreateNewFolder(db)
 		folderName, err = db.Get([]byte("latest_folder"), nil)
-		if checkerr.InternalServerError(err, &w) {
+		if checkerr.InternalServerError(&w, err) {
 			return
 		}
 	}
 
 	formFile, _, err = r.FormFile("image")
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 
-	if err := saveImage(fileName, string(folderName), formFile, db); checkerr.InternalServerError(err, &w) {
+	if err := saveImage(fileName, string(folderName), formFile, db); checkerr.InternalServerError(&w, err) {
 		return
 	}
 
@@ -155,7 +155,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resjson, err := json.Marshal(res)
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 // InternalServerError error
-func InternalServerError(err error, w *http.ResponseWriter) bool {
+func InternalServerError(w *http.ResponseWriter, err error) bool {
 	if err != nil {
 		fmt.Println(err)
 		httpstates.InternalServerError(w)
@@ -18,7 +18,7 @@ func InternalServerError(err error, w *http.ResponseWriter) bool {
 }
 
 // BadRequest error
-func BadRequest(err error, w *http.ResponseWriter) bool {
+func BadRequest(w *http.ResponseWriter, err error) bool {
 	if err != nil {
 		httpstates.BadRequest(w)
 		return true

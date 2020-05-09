@@ -20,7 +20,7 @@ func GetImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", ImageFilesRoot), nil)
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 	defer db.Close()

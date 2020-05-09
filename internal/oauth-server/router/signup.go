@@ -24,7 +24,7 @@ func findMailAddressDuplicate(w *http.ResponseWriter, mailAddress string) bool {
 	)
 	rows, err := db.RunSQL(sqlStatement)
 	defer rows.Close()
-	if checkerr.InternalServerError(err, w) {
+	if checkerr.InternalServerError(w, err) {
 		return true
 	}
 	if rows.Next() {
@@ -41,7 +41,7 @@ func findVerificationCode(w *http.ResponseWriter, mailAddress string, verificati
 	)
 	rows, err := db.RunSQL(sqlStatement)
 	defer rows.Close()
-	if checkerr.InternalServerError(err, w) {
+	if checkerr.InternalServerError(w, err) {
 		return false
 	}
 	if !rows.Next() {
@@ -70,7 +70,7 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 		MailAddress: mailAddress,
 	}
 	validate := validator.New()
-	if err := validate.Struct(req); checkerr.BadRequest(err, &w) {
+	if err := validate.Struct(req); checkerr.BadRequest(&w, err) {
 		return
 	}
 
@@ -82,7 +82,7 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 		"DELETE FROM pending WHERE mail_address = '%s'",
 		mailAddress,
 	)
-	if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(err, &w) {
+	if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(&w, err) {
 		return
 	}
 
@@ -90,7 +90,7 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 		"INSERT INTO pending (mail_address, verification_code, expiration) VALUES('%s', %d, '%s')",
 		mailAddress, verificationCode, expiration,
 	)
-	if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(err, &w) {
+	if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(&w, err) {
 		return
 	}
 
@@ -104,7 +104,7 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 		Subject: fmt.Sprintf("確認コード: %d", verificationCode),
 		Text:    msg,
 	}
-	if err := mail.Send(m); checkerr.InternalServerError(err, &w) {
+	if err := mail.Send(m); checkerr.InternalServerError(&w, err) {
 		return
 	}
 	httpstates.OK(&w)
@@ -119,7 +119,7 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	mailAddress := db.EscapeSinglequotation(r.FormValue("mail_address"))
 	verificationCode, err := strconv.Atoi(r.FormValue("verification_code"))
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 
@@ -132,7 +132,7 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 		VerificationCode: verificationCode,
 	}
 	validate := validator.New()
-	if err := validate.Struct(req); checkerr.BadRequest(err, &w) {
+	if err := validate.Struct(req); checkerr.BadRequest(&w, err) {
 		return
 	}
 
@@ -152,7 +152,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	mailAddress := db.EscapeSinglequotation(r.FormValue("mail_address"))
 	verificationCode, err := strconv.Atoi(r.FormValue("verification_code"))
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 	username := db.EscapeSinglequotation(r.FormValue("username"))
@@ -171,7 +171,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		Password:         password,
 	}
 	validate := validator.New()
-	if err := validate.Struct(req); checkerr.BadRequest(err, &w) {
+	if err := validate.Struct(req); checkerr.BadRequest(&w, err) {
 		return
 	}
 
@@ -184,11 +184,11 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 	id, err := random.GenerateRandomString()
-	if checkerr.InternalServerError(err, &w) {
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 
