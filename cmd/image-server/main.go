@@ -4,43 +4,24 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	imageServer "github.com/aakawazu/WazuPlay/internal/image-server/router"
-	"github.com/aakawazu/WazuPlay/pkg/random"
 	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-func initLeveldb() {
-	db, err := leveldb.OpenFile("/wazuplay-files/images/leveldb/", nil)
+func initImageFolder() {
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", imageServer.ImageFilesRoot), nil)
+	defer db.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-	_, err = db.Get([]byte("latest_folder"), nil)
-	if err != nil {
+
+	if _, err := db.Get([]byte("latest_folder"), nil); err != nil {
 		if err != leveldb.ErrNotFound {
 			log.Fatal(err)
 		}
-
-		folderName, err := random.GenerateRandomString()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := db.Put([]byte("latest_folder"), []byte(folderName), nil); err != nil {
-			log.Fatal(err)
-		}
-
-		if err := db.Put([]byte("filesin_latest_folder"), []byte("0"), nil); err != nil {
-			log.Fatal(err)
-		}
-
-		err = os.MkdirAll(fmt.Sprintf("/wazuplay-files/images/files/%s", folderName), 0777)
-		if err != nil {
-			log.Fatal(err)
-		}
+		imageServer.CreateNewFolder(db)
 	}
 }
 
@@ -50,7 +31,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	initLeveldb()
+	initImageFolder()
 
 	router := imageServer.NewRouter()
 	fmt.Println("hello, Image")
