@@ -147,10 +147,11 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	scheme := os.Getenv("SCHEME")
 	domain := os.Getenv("DOMAIN")
 
 	res := uploadImageResponse{
-		URL: fmt.Sprintf("https://images.%s/%s", domain, fileName),
+		URL: fmt.Sprintf("%s://images.%s/%s", scheme, domain, fileName),
 	}
 
 	resjson, err := json.Marshal(res)
