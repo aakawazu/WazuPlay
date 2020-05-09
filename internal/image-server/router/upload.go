@@ -1,12 +1,14 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/jpeg"
+	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/aakawazu/WazuPlay/pkg/checkerr"
 	"github.com/aakawazu/WazuPlay/pkg/httpstates"
@@ -16,6 +18,75 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+// ImageFilesRoot image files root
+var ImageFilesRoot string = "/wazuplay-files/images"
+
+type uploadImageResponse struct {
+	URL string `json:"url"`
+}
+
+func checkIfTheImage(file multipart.File) (bool, error) {
+	allowedFiletype := []string{"image/png", "image/jpeg"}
+	mime, err := mimetype.DetectReader(file)
+	if err != nil {
+		return false, err
+	}
+
+	if !mimetype.EqualsAny(mime.String(), allowedFiletype...) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func numberOfFiles(folderName string) (int, error) {
+	fileList, err := ioutil.ReadDir(fmt.Sprintf("%s/files/%s", ImageFilesRoot, folderName))
+	if err != nil {
+		return 0, err
+	}
+	return len(fileList), err
+}
+
+// CreateNewFolder create new folder
+func CreateNewFolder(db *leveldb.DB) error {
+	newFolderName, err := random.GenerateRandomString()
+
+	err = os.MkdirAll(fmt.Sprintf("%s/files/%s", ImageFilesRoot, newFolderName), 0777)
+	if err != nil {
+		return err
+	}
+
+	if err := db.Put([]byte("latest_folder"), []byte(newFolderName), nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func saveImage(fileName string, folderName string, formFile multipart.File, db *leveldb.DB) error {
+	img, _, err := image.Decode(formFile)
+	if err != nil {
+		return err
+	}
+
+	resizedImg := resize.Thumbnail(1200, 1200, img, resize.Bicubic)
+
+	out, err := os.Create(fmt.Sprintf("%s/files/%s/%s", ImageFilesRoot, folderName, fileName))
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if err := jpeg.Encode(out, resizedImg, nil); err != nil {
+		return err
+	}
+
+	if err := db.Put([]byte(fileName), []byte(folderName), nil); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UploadImage /upload
 func UploadImage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -23,74 +94,24 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", ImageFilesRoot), nil)
+	if checkerr.InternalServerError(err, &w) {
+		return
+	}
+	defer db.Close()
+
 	r.ParseMultipartForm(32 << 20)
+
 	formFile, _, err := r.FormFile("image")
 	if checkerr.InternalServerError(err, &w) {
 		return
 	}
 	defer formFile.Close()
 
-	if checkerr.InternalServerError(err, &w) {
+	if checkImg, err := checkIfTheImage(formFile); checkerr.InternalServerError(err, &w) {
 		return
-	}
-
-	allowedFiletype := []string{"image/png", "image/jpeg"}
-	mime, err := mimetype.DetectReader(formFile)
-	if checkerr.InternalServerError(err, &w) {
-		return
-	}
-
-	if !mimetype.EqualsAny(mime.String(), allowedFiletype...) {
+	} else if !checkImg {
 		httpstates.BadRequest(&w)
-		return
-	}
-
-	formFile, _, err = r.FormFile("image")
-	if checkerr.InternalServerError(err, &w) {
-		return
-	}
-
-	img, _, err := image.Decode(formFile)
-	if checkerr.InternalServerError(err, &w) {
-		return
-	}
-
-	resizedImg := resize.Thumbnail(1200, 1200, img, resize.Bicubic)
-	db, err := leveldb.OpenFile("/wazuplay-files/images/leveldb/", nil)
-	if checkerr.InternalServerError(err, &w) {
-		return
-	}
-	defer db.Close()
-
-	filesinLatestFolderS, err := db.Get([]byte("filesin_latest_folder"), nil)
-	if checkerr.InternalServerError(err, &w) {
-		return
-	}
-	filesinLatestFolder, err := strconv.Atoi(string(filesinLatestFolderS))
-	if checkerr.InternalServerError(err, &w) {
-		return
-	}
-	if filesinLatestFolder > 50000 {
-		newFolderName, err := random.GenerateRandomString()
-		if checkerr.InternalServerError(err, &w) {
-			return
-		}
-
-		if err := db.Put([]byte("latest_folder"), []byte(newFolderName), nil); checkerr.InternalServerError(err, &w) {
-			return
-		}
-
-		if err := db.Put([]byte("filesin_latest_folder"), []byte("0"), nil); checkerr.InternalServerError(err, &w) {
-			return
-		}
-
-		err = os.MkdirAll(fmt.Sprintf("/wazuplay-files/images/files/%s", newFolderName), 0777)
-		if checkerr.InternalServerError(err, &w) {
-			return
-		}
-	}
-	folderName, err := db.Get([]byte("latest_folder"), nil)
-	if checkerr.InternalServerError(err, &w) {
 		return
 	}
 
@@ -99,18 +120,41 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, err := os.Create(fmt.Sprintf("/wazuplay-files/images/files/%s/%s", folderName, fileName))
+	folderName, err := db.Get([]byte("latest_folder"), nil)
 	if checkerr.InternalServerError(err, &w) {
 		return
 	}
-	defer out.Close()
 
-	if err := jpeg.Encode(out, resizedImg, nil); checkerr.InternalServerError(err, &w) {
+	if files, err := numberOfFiles(string(folderName)); checkerr.InternalServerError(err, &w) {
+		return
+	} else if files > 5 {
+		CreateNewFolder(db)
+		folderName, err = db.Get([]byte("latest_folder"), nil)
+		if checkerr.InternalServerError(err, &w) {
+			return
+		}
+	}
+
+	formFile, _, err = r.FormFile("image")
+	if checkerr.InternalServerError(err, &w) {
 		return
 	}
 
-	if err := db.Put([]byte(fileName), []byte(folderName), nil); checkerr.InternalServerError(err, &w) {
+	if err := saveImage(fileName, string(folderName), formFile, db); checkerr.InternalServerError(err, &w) {
 		return
 	}
 
+	domain := os.Getenv("DOMAIN")
+
+	res := uploadImageResponse{
+		URL: fmt.Sprintf("https://images.%s/%s", domain, fileName),
+	}
+
+	resjson, err := json.Marshal(res)
+	if checkerr.InternalServerError(err, &w) {
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(resjson))
 }
