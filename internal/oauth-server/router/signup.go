@@ -17,6 +17,25 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// GenerateVerificationCodeRequest generate verificationcode request
+type GenerateVerificationCodeRequest struct {
+	MailAddress string `validate:"required,email"`
+}
+
+// ConfirmVerificationCodeRequest confirm verification code request
+type ConfirmVerificationCodeRequest struct {
+	MailAddress      string `validate:"required,email"`
+	VerificationCode int    `validate:"gte=0,lt=999999"`
+}
+
+// SignUpRequest sign up request
+type SignUpRequest struct {
+	MailAddress      string `validate:"required,email"`
+	VerificationCode int    `validate:"min=1,max=999999"`
+	Username         string `validate:"required"`
+	Password         string `validate:"required,min=5,max=50"`
+}
+
 func findMailAddressDuplicate(w *http.ResponseWriter, mailAddress string) bool {
 	sqlStatement := fmt.Sprintf(
 		"SELECT * FROM users WHERE mail_address = '%s'",
@@ -63,10 +82,7 @@ func GenerateVerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 	verificationCode := rand.Intn(999999)
 	expiration := db.TimeNow(15)
 
-	type request struct {
-		MailAddress string `validate:"required,email"`
-	}
-	req := &request{
+	req := &GenerateVerificationCodeRequest{
 		MailAddress: mailAddress,
 	}
 	validate := validator.New()
@@ -123,11 +139,7 @@ func ConfirmVerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type request struct {
-		MailAddress      string `validate:"required,email"`
-		VerificationCode int    `validate:"gte=0,lt=999999"`
-	}
-	req := &request{
+	req := &ConfirmVerificationCodeRequest{
 		MailAddress:      mailAddress,
 		VerificationCode: verificationCode,
 	}
@@ -158,13 +170,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	username := db.EscapeSinglequotation(r.FormValue("username"))
 	password := db.EscapeSinglequotation(r.FormValue("password"))
 
-	type request struct {
-		MailAddress      string `validate:"required,email"`
-		VerificationCode int    `validate:"min=1,max=999999"`
-		Username         string `validate:"required"`
-		Password         string `validate:"required,min=5,max=50"`
-	}
-	req := &request{
+	req := &SignUpRequest{
 		MailAddress:      mailAddress,
 		VerificationCode: verificationCode,
 		Username:         username,
