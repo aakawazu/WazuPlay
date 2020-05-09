@@ -50,6 +50,9 @@ func numberOfFiles(folderName string) (int, error) {
 // CreateNewFolder create new folder
 func CreateNewFolder(db *leveldb.DB) error {
 	newFolderName, err := random.GenerateRandomString()
+	if err != nil {
+		return err
+	}
 
 	err = os.MkdirAll(fmt.Sprintf("%s/files/%s", ImageFilesRoot, newFolderName), 0777)
 	if err != nil {
