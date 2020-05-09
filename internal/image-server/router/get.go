@@ -12,8 +12,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-// GetImage get image
-func GetImage(w http.ResponseWriter, r *http.Request) {
+// GetHandler /*
+func GetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpstates.MethodNotAllowed(&w)
 		return

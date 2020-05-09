@@ -90,8 +90,8 @@ func saveImage(fileName string, folderName string, formFile multipart.File, db *
 	return nil
 }
 
-// UploadImage /upload
-func UploadImage(w http.ResponseWriter, r *http.Request) {
+// UploadHandler /upload
+func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpstates.MethodNotAllowed(&w)
 		return

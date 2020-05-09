@@ -10,13 +10,13 @@ import (
 // NewRouter oauth server router
 func NewRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/", Index)
-	router.HandleFunc("/upload", UploadImage)
-	router.HandleFunc("/{id}", GetImage)
+	router.HandleFunc("/", IndexHandler)
+	router.HandleFunc("/upload", UploadHandler)
+	router.HandleFunc("/{id}", GetHandler)
 	return router
 }
 
-//Index index
-func Index(w http.ResponseWriter, r *http.Request) {
+//IndexHandler /
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, Image")
 }
