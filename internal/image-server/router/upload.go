@@ -130,7 +130,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	if files, err := numberOfFiles(string(folderName)); checkerr.InternalServerError(err, &w) {
 		return
-	} else if files > 5 {
+	} else if files > 50000 {
 		CreateNewFolder(db)
 		folderName, err = db.Get([]byte("latest_folder"), nil)
 		if checkerr.InternalServerError(err, &w) {
