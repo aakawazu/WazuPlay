@@ -14,6 +14,11 @@ import (
 
 // GetImage get image
 func GetImage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		httpstates.MethodNotAllowed(&w)
+		return
+	}
+
 	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", ImageFilesRoot), nil)
 	if checkerr.InternalServerError(err, &w) {
 		return
