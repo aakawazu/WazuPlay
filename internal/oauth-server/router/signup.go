@@ -51,8 +51,8 @@ func findVerificationCode(w *http.ResponseWriter, mailAddress string, verificati
 	return true
 }
 
-// GenerateVerificationCode /verificationcode/generate
-func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
+// GenerateVerificationCodeHandler /verificationcode/generate
+func GenerateVerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpstates.MethodNotAllowed(&w)
 		return
@@ -110,8 +110,8 @@ func GenerateVerificationCode(w http.ResponseWriter, r *http.Request) {
 	httpstates.OK(&w)
 }
 
-// ConfirmVerificationCode /verificationcode/confirm
-func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
+// ConfirmVerificationCodeHandler /verificationcode/confirm
+func ConfirmVerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpstates.MethodNotAllowed(&w)
 		return
@@ -143,8 +143,8 @@ func ConfirmVerificationCode(w http.ResponseWriter, r *http.Request) {
 	httpstates.OK(&w)
 }
 
-// SignUp /signup
-func SignUp(w http.ResponseWriter, r *http.Request) {
+// SignUpHandler /signup
+func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpstates.MethodNotAllowed(&w)
 		return
