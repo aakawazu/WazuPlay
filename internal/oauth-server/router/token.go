@@ -27,14 +27,6 @@ type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func validateTokenRequest(req *TokenRequest) bool {
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		return false
-	}
-	return true
-}
-
 // TokenHandler /token
 func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -51,7 +43,8 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		Password:    password,
 	}
 
-	if !validateTokenRequest(req) {
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
 		httpstates.BadRequest(&w)
 		return
 	}
