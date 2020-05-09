@@ -24,10 +24,10 @@ services:
             context: ./
             dockerfile: ./build/package/oauth-server/Dockerfile
         environment: 
-            VIRTUAL_HOST: oauth.${HOSTNAME}
+            VIRTUAL_HOST: oauth.${DOMAIN}
     image-server:
         build:
             context: ./
             dockerfile: ./build/package/image-server/Dockerfile
         environment: 
-            VIRTUAL_HOST: images.${HOSTNAME}
+            VIRTUAL_HOST: images.${DOMAIN}
