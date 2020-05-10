@@ -37,19 +37,17 @@ func generateTokenResponse(id string) ([]byte, error) {
 		return nil, err
 	}
 
-	sqlStatement := fmt.Sprintf(
+	if _, err := db.RunSQL(fmt.Sprintf(
 		"INSERT INTO access_token (token, expiration, user_id) VALUES('%s', '%s', '%s')",
 		accessToken, db.TimeNow(60), id,
-	)
-	if _, err := db.RunSQL(sqlStatement); err != nil {
+	)); err != nil {
 		return nil, err
 	}
 
-	sqlStatement = fmt.Sprintf(
+	if _, err := db.RunSQL(fmt.Sprintf(
 		"INSERT INTO refresh_token (token, expiration, user_id) VALUES('%s', '%s', '%s')",
 		refreshToken, db.TimeNow(43200), id,
-	)
-	if _, err := db.RunSQL(sqlStatement); err != nil {
+	)); err != nil {
 		return nil, err
 	}
 
