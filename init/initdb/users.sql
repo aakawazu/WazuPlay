@@ -1,5 +1,5 @@
 create table users (
-    id                          text,
+    user_id                     text,
     username                    text,
     mail_address                text,
     hashed_password             text,

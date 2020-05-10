@@ -195,7 +195,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := db.RunSQL(fmt.Sprintf(
-		"INSERT INTO users (id, username, mail_address, hashed_password) VALUES('%s', '%s', '%s', '%s')",
+		"INSERT INTO users (user_id, username, mail_address, hashed_password) VALUES('%s', '%s', '%s', '%s')",
 		id, username, mailAddress, hashedPassword,
 	)); err != nil {
 		httpstates.InternalServerError(&w)
