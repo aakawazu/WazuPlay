@@ -37,11 +37,10 @@ type SignUpRequest struct {
 }
 
 func findMailAddressDuplicate(w *http.ResponseWriter, mailAddress string) bool {
-	sqlStatement := fmt.Sprintf(
+	rows, err := db.RunSQL(fmt.Sprintf(
 		"SELECT * FROM users WHERE mail_address = '%s'",
 		mailAddress,
-	)
-	rows, err := db.RunSQL(sqlStatement)
+	))
 	defer rows.Close()
 	if checkerr.InternalServerError(w, err) {
 		return true
@@ -54,11 +53,10 @@ func findMailAddressDuplicate(w *http.ResponseWriter, mailAddress string) bool {
 }
 
 func findVerificationCode(w *http.ResponseWriter, mailAddress string, verificationCode int) bool {
-	sqlStatement := fmt.Sprintf(
+	rows, err := db.RunSQL(fmt.Sprintf(
 		"SELECT * FROM pending WHERE mail_address = '%s' and verification_code = %d and expiration > '%s'",
 		mailAddress, verificationCode, db.TimeNow(0),
-	)
-	rows, err := db.RunSQL(sqlStatement)
+	))
 	defer rows.Close()
 	if checkerr.InternalServerError(w, err) {
 		return false
@@ -94,19 +92,17 @@ func GenerateVerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sqlStatement := fmt.Sprintf(
+	if _, err := db.RunSQL(fmt.Sprintf(
 		"DELETE FROM pending WHERE mail_address = '%s'",
 		mailAddress,
-	)
-	if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(&w, err) {
+	)); checkerr.InternalServerError(&w, err) {
 		return
 	}
 
-	sqlStatement = fmt.Sprintf(
+	if _, err := db.RunSQL(fmt.Sprintf(
 		"INSERT INTO pending (mail_address, verification_code, expiration) VALUES('%s', %d, '%s')",
 		mailAddress, verificationCode, expiration,
-	)
-	if _, err := db.RunSQL(sqlStatement); checkerr.InternalServerError(&w, err) {
+	)); checkerr.InternalServerError(&w, err) {
 		return
 	}
 
@@ -198,11 +194,10 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sqlStatement := fmt.Sprintf(
+	if _, err := db.RunSQL(fmt.Sprintf(
 		"INSERT INTO users (id, username, mail_address, hashed_password) VALUES('%s', '%s', '%s', '%s')",
 		id, username, mailAddress, hashedPassword,
-	)
-	if _, err := db.RunSQL(sqlStatement); err != nil {
+	)); err != nil {
 		httpstates.InternalServerError(&w)
 		return
 	}
