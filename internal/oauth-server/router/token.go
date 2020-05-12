@@ -93,11 +93,10 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		sqlStatement := fmt.Sprintf(
+		rows, err := db.RunSQL(fmt.Sprintf(
 			"SELECT DISTINCT user_id, hashed_password FROM users WHERE mail_address = '%s'",
 			mailaddress,
-		)
-		rows, err := db.RunSQL(sqlStatement)
+		))
 		defer rows.Close()
 		if checkerr.InternalServerError(&w, err) {
 			return
@@ -108,6 +107,12 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			rows.Scan(&id, &hashedPassword)
 		}
+
+		if id == "" || hashedPassword == "" {
+			httpstates.BadRequest(&w)
+			return
+		}
+
 		if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); checkerr.BadRequest(&w, err) {
 			return
 		}
@@ -131,6 +136,11 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		var id string
 		for rows.Next() {
 			rows.Scan(&id)
+		}
+
+		if id == "" {
+			httpstates.BadRequest(&w)
+			return
 		}
 
 		resjson, err = generateTokenResponse(id)
