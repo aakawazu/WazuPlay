@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -15,7 +14,7 @@ import (
 	"github.com/aakawazu/WazuPlay/pkg/httpstates"
 	"github.com/aakawazu/WazuPlay/pkg/random"
 	"github.com/aakawazu/WazuPlay/pkg/token"
-	"github.com/gabriel-vasile/mimetype"
+	"github.com/aakawazu/WazuPlay/pkg/upload"
 	"github.com/nfnt/resize"
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -25,47 +24,6 @@ var ImageFilesRoot string = "/wazuplay-files/images"
 
 type uploadImageResponse struct {
 	URL string `json:"url"`
-}
-
-func checkIfTheImage(file multipart.File) (bool, error) {
-	allowedFiletype := []string{"image/png", "image/jpeg"}
-	mime, err := mimetype.DetectReader(file)
-	if err != nil {
-		return false, err
-	}
-
-	if !mimetype.EqualsAny(mime.String(), allowedFiletype...) {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func numberOfFiles(folderName string) (int, error) {
-	fileList, err := ioutil.ReadDir(fmt.Sprintf("%s/files/%s", ImageFilesRoot, folderName))
-	if err != nil {
-		return 0, err
-	}
-	return len(fileList), err
-}
-
-// CreateNewFolder create new folder
-func CreateNewFolder(db *leveldb.DB) error {
-	newFolderName, err := random.GenerateRandomString()
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(fmt.Sprintf("%s/files/%s", ImageFilesRoot, newFolderName), 0777)
-	if err != nil {
-		return err
-	}
-
-	if err := db.Put([]byte("latest_folder"), []byte(newFolderName), nil); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func saveImage(fileName string, folderName string, formFile multipart.File, db *leveldb.DB) error {
@@ -127,7 +85,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer formFile.Close()
 
-	if checkImg, err := checkIfTheImage(formFile); checkerr.InternalServerError(&w, err) {
+	if checkImg, err := upload.CheckIfTheAllowedFileType(formFile, []string{"image/png", "image/jpeg"}); checkerr.InternalServerError(&w, err) {
 		return
 	} else if !checkImg {
 		httpstates.BadRequest(&w)
@@ -144,10 +102,15 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if files, err := numberOfFiles(string(folderName)); checkerr.InternalServerError(&w, err) {
+	if files, err := upload.NumberOfFiles(ImageFilesRoot, string(folderName)); checkerr.InternalServerError(&w, err) {
 		return
 	} else if files > 50000 {
-		CreateNewFolder(db)
+		if folderName, err := upload.CreateNewFolder(ImageFilesRoot); checkerr.InternalServerError(&w, err) {
+			return
+		} else if err := db.Put([]byte("latest_folder"), []byte(folderName), nil); checkerr.InternalServerError(&w, err) {
+			return
+		}
+
 		folderName, err = db.Get([]byte("latest_folder"), nil)
 		if checkerr.InternalServerError(&w, err) {
 			return
