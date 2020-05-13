@@ -6,12 +6,14 @@ import (
 	"net/http"
 
 	imageServer "github.com/aakawazu/WazuPlay/internal/image-server/router"
+	"github.com/aakawazu/WazuPlay/pkg/upload"
 	"github.com/joho/godotenv"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
 func initImageFolder() {
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", imageServer.ImageFilesRoot), nil)
+	rootFolder := imageServer.ImageFilesRoot
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", rootFolder), nil)
 	defer db.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -21,7 +23,13 @@ func initImageFolder() {
 		if err != leveldb.ErrNotFound {
 			log.Fatal(err)
 		}
-		imageServer.CreateNewFolder(db)
+		if folderName, err := upload.CreateNewFolder(rootFolder); err != nil {
+			log.Fatal(err)
+		} else {
+			if err := db.Put([]byte("latest_folder"), []byte(folderName), nil); err != nil {
+				log.Fatal(err)
+			}
+		}
 	}
 }
 
