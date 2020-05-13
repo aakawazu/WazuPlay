@@ -11,8 +11,10 @@ import (
 	"os"
 
 	"github.com/aakawazu/WazuPlay/pkg/checkerr"
+	pgdb "github.com/aakawazu/WazuPlay/pkg/db"
 	"github.com/aakawazu/WazuPlay/pkg/httpstates"
 	"github.com/aakawazu/WazuPlay/pkg/random"
+	"github.com/aakawazu/WazuPlay/pkg/token"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/nfnt/resize"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -104,6 +106,20 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	r.ParseMultipartForm(32 << 20)
+
+	accessToken := pgdb.EscapeSinglequotation(r.FormValue("token"))
+	if checkerr.InternalServerError(&w, err) {
+		return
+	}
+
+	if _, err := token.VerificationAccessToken(accessToken); err != nil {
+		if err == token.ErrTokenNotfound {
+			httpstates.BadRequest(&w)
+			return
+		}
+		httpstates.InternalServerError(&w)
+		return
+	}
 
 	formFile, _, err := r.FormFile("image")
 	if checkerr.InternalServerError(&w, err) {
