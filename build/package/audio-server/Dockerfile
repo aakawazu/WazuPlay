@@ -5,7 +5,7 @@ COPY . .
 WORKDIR /go/src/WazuPlay/cmd/audio-server
 RUN go build main.go
 
-FROM alpine:3.11
+FROM alfg/ffmpeg:latest
 WORKDIR /go/src/WazuPlay/cmd/audio-server
 EXPOSE 8080
 
