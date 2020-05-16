@@ -66,9 +66,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(32 << 20)
 
 	accessToken := pgdb.EscapeSinglequotation(r.FormValue("token"))
-	if checkerr.InternalServerError(&w, err) {
-		return
-	}
 
 	if _, err := token.VerificationAccessToken(accessToken); err != nil {
 		if err == token.ErrTokenNotfound {
@@ -79,7 +76,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	formFile, _, err := r.FormFile("image")
+	formFile, _, err := r.FormFile("file")
 	if checkerr.InternalServerError(&w, err) {
 		return
 	}
