@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/aakawazu/WazuPlay/pkg/db"
 	"github.com/aakawazu/WazuPlay/pkg/httpstates"
 	"github.com/gabriel-vasile/mimetype"
 )
@@ -32,5 +33,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		httpstates.MethodNotAllowed(&w)
 		return
 	}
+	r.ParseForm()
+	accessToken := db.EscapeSinglequotation(r.FormValue("token"))
 
 }
