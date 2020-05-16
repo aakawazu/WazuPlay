@@ -82,10 +82,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer formFile.Close()
 
-	if checkImg, err := upload.CheckIfTheAllowedFileType(formFile, []string{"image/png", "image/jpeg"}); checkerr.InternalServerError(&w, err) {
-		return
-	} else if !checkImg {
+	err = upload.CheckIfTheAllowedFileType(formFile, []string{"image/png", "image/jpeg"})
+	switch err {
+	case nil:
+	case upload.ErrFileTypeNotAllowed:
 		httpstates.BadRequest(&w)
+		return
+	default:
+		httpstates.InternalServerError(&w)
 		return
 	}
 
