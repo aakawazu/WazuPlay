@@ -67,13 +67,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	accessToken := pgdb.EscapeSinglequotation(r.FormValue("token"))
 
-	if _, err := token.VerificationAccessToken(accessToken); err != nil {
-		if err == token.ErrTokenNotfound {
-			httpstates.BadRequest(&w)
-			return
-		}
+	_, err = token.VerificationAccessToken(accessToken)
+
+	switch err {
+	case nil:
+	case token.ErrTokenNotfound:
+		httpstates.BadRequest(&w)
+	default:
 		httpstates.InternalServerError(&w)
-		return
 	}
 
 	formFile, _, err := r.FormFile("file")
