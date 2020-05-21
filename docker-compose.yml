@@ -1,7 +1,9 @@
 version: "3.7"
 services:
     nginx-proxy:
-        image: jwilder/nginx-proxy
+        build:
+            context: ./
+            dockerfile: ./build/package/nginx-proxy/Dockerfile
         ports:
           - "80:80"
         volumes:
@@ -14,6 +16,7 @@ services:
             POSTGRES_PASSWORD: ${DB_PASSWORD}
         volumes:
             - ./init/initdb/:/docker-entrypoint-initdb.d
+            - ${SAVE_FOLDER}/postgres:/var/lib/postgresql/data
     mail:
         image: catatnight/postfix
         environment: 
@@ -31,6 +34,8 @@ services:
             dockerfile: ./build/package/image-server/Dockerfile
         environment: 
             VIRTUAL_HOST: images.${DOMAIN}
+        volumes:
+            - ${SAVE_FOLDER}/images:/wazuplay-files/images
     audio-server:
         build:
             context: ./
