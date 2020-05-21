@@ -119,7 +119,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	formFile, _, err = r.FormFile("image")
+	formFile, _, err = r.FormFile("file")
 	if checkerr.InternalServerError(&w, err) {
 		return
 	}
