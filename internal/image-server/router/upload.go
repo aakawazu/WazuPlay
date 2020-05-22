@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"mime/multipart"
 	"net/http"
 	"os"
 
 	"github.com/aakawazu/WazuPlay/pkg/checkerr"
 	pgdb "github.com/aakawazu/WazuPlay/pkg/db"
 	"github.com/aakawazu/WazuPlay/pkg/httpstates"
-	"github.com/aakawazu/WazuPlay/pkg/random"
+	"github.com/aakawazu/WazuPlay/pkg/storage"
 	"github.com/aakawazu/WazuPlay/pkg/token"
 	"github.com/aakawazu/WazuPlay/pkg/upload"
 	"github.com/nfnt/resize"
@@ -24,30 +23,6 @@ var ImageFilesRoot string = "/wazuplay-files/images"
 
 type uploadImageResponse struct {
 	URL string `json:"url"`
-}
-
-func saveImage(fileName string, folderName string, formFile multipart.File, db *leveldb.DB) error {
-	img, _, err := image.Decode(formFile)
-	if err != nil {
-		return err
-	}
-
-	resizedImg := resize.Thumbnail(1200, 1200, img, resize.Bicubic)
-
-	out, err := os.Create(fmt.Sprintf("%s/files/%s/%s", ImageFilesRoot, folderName, fileName))
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	if err := jpeg.Encode(out, resizedImg, nil); err != nil {
-		return err
-	}
-
-	if err := db.Put([]byte(fileName), []byte(folderName), nil); err != nil {
-		return err
-	}
-	return nil
 }
 
 // UploadHandler /upload
@@ -94,29 +69,10 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileName, err := random.GenerateRandomString()
+	file, imageID, err := storage.Create(db, ImageFilesRoot)
+	defer file.Close()
 	if checkerr.InternalServerError(&w, err) {
 		return
-	}
-
-	folderName, err := db.Get([]byte("latest_folder"), nil)
-	if checkerr.InternalServerError(&w, err) {
-		return
-	}
-
-	if files, err := upload.NumberOfFiles(ImageFilesRoot, string(folderName)); checkerr.InternalServerError(&w, err) {
-		return
-	} else if files > 50000 {
-		if folderName, err := upload.CreateNewFolder(ImageFilesRoot); checkerr.InternalServerError(&w, err) {
-			return
-		} else if err := db.Put([]byte("latest_folder"), []byte(folderName), nil); checkerr.InternalServerError(&w, err) {
-			return
-		}
-
-		folderName, err = db.Get([]byte("latest_folder"), nil)
-		if checkerr.InternalServerError(&w, err) {
-			return
-		}
 	}
 
 	formFile, _, err = r.FormFile("file")
@@ -124,7 +80,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := saveImage(fileName, string(folderName), formFile, db); checkerr.InternalServerError(&w, err) {
+	img, _, err := image.Decode(formFile)
+	if err != nil {
+		return
+	}
+
+	resizedImg := resize.Thumbnail(1200, 1200, img, resize.Bicubic)
+
+	if err := jpeg.Encode(file, resizedImg, nil); err != nil {
 		return
 	}
 
@@ -132,7 +95,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	domain := os.Getenv("DOMAIN")
 
 	res := uploadImageResponse{
-		URL: fmt.Sprintf("%s://images.%s/%s", scheme, domain, fileName),
+		URL: fmt.Sprintf("%s://images.%s/%s", scheme, domain, imageID),
 	}
 
 	resjson, err := json.Marshal(res)
