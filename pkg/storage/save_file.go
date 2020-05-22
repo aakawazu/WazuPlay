@@ -9,7 +9,13 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-func Create(db *leveldb.DB, rootFolderUri string) (*os.File, string, error) {
+func Create(rootFolderUri string) (*os.File, string, error) {
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb", rootFolderUri), nil)
+	defer db.Close()
+	if err != nil {
+		return nil, "", err
+	}
+
 	fileName, err := random.GenerateRandomString()
 	if err != nil {
 		return nil, "", err
@@ -37,6 +43,11 @@ func Create(db *leveldb.DB, rootFolderUri string) (*os.File, string, error) {
 		}
 
 		folderName = []byte(folderNameString)
+
+		err = os.MkdirAll(fmt.Sprintf("%s/files/%s", rootFolderUri, folderName), 0777)
+		if err != nil {
+			return nil, "", err
+		}
 
 		if err := db.Put([]byte("latest_folder"), []byte(folderName), nil); err != nil {
 			return nil, "", err

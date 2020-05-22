@@ -15,7 +15,6 @@ import (
 	"github.com/aakawazu/WazuPlay/pkg/token"
 	"github.com/aakawazu/WazuPlay/pkg/upload"
 	"github.com/nfnt/resize"
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
 // ImageFilesRoot image files root
@@ -32,17 +31,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", ImageFilesRoot), nil)
-	if checkerr.InternalServerError(&w, err) {
-		return
-	}
-	defer db.Close()
-
 	r.ParseMultipartForm(32 << 20)
 
 	accessToken := pgdb.EscapeSinglequotation(r.FormValue("token"))
 
-	_, err = token.VerificationAccessToken(accessToken)
+	_, err := token.VerificationAccessToken(accessToken)
 
 	switch err {
 	case nil:
@@ -69,7 +62,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, imageID, err := storage.Create(db, ImageFilesRoot)
+	file, imageID, err := storage.Create(ImageFilesRoot)
 	defer file.Close()
 	if checkerr.InternalServerError(&w, err) {
 		return
