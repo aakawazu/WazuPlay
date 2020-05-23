@@ -20,13 +20,13 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 	fileName := mux.Vars(r)["id"]
 
 	img, err := storage.Open(ImageFilesRoot, fileName)
-	if err != nil {
-		if err == leveldb.ErrNotFound {
-			httpstates.NotFound(&w)
-			return
-		}
+
+	switch err {
+	case nil:
+	case leveldb.ErrNotFound:
+		httpstates.NotFound(&w)
+	default:
 		httpstates.InternalServerError(&w)
-		return
 	}
 
 	w.Header().Set("Content-Type", "image/jpeg")
