@@ -20,7 +20,8 @@ import (
 // ImageFilesRoot image files root
 var ImageFilesRoot string = "/wazuplay-files/images"
 
-type uploadImageResponse struct {
+// UploadImageResponse upload image response
+type UploadImageResponse struct {
 	URL string `json:"url"`
 }
 
@@ -87,7 +88,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	scheme := os.Getenv("SCHEME")
 	domain := os.Getenv("DOMAIN")
 
-	res := uploadImageResponse{
+	res := UploadImageResponse{
 		URL: fmt.Sprintf("%s://images.%s/%s", scheme, domain, imageID),
 	}
 
