@@ -13,4 +13,5 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.0
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+	github.com/xfrr/goffmpeg v0.0.0-20200403115021-c3a1545b29f4
 )

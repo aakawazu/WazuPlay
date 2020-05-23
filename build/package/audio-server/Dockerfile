@@ -11,5 +11,6 @@ EXPOSE 8080
 
 COPY --from=binary /go/src/WazuPlay/.env /go/src/WazuPlay
 COPY --from=binary /go/src/WazuPlay/cmd/audio-server/main /go/src/WazuPlay/cmd/audio-server
+RUN mkdir -p /wazuplay-files/audio/tmp
 
 CMD ["/go/src/WazuPlay/cmd/audio-server/main"]
