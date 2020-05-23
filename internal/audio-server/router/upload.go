@@ -112,13 +112,12 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	err = upload.CheckIfTheAllowedFileType(formFile, []string{
 		"audio/ogg", "audio/mpeg", "audio/flac", "audio/wav", "audio/aac", "audio/mp4", "audio/x-m4a", "video/mp4",
 	})
-
-	formFile, _, err = r.FormFile("file")
-	if checkerr.InternalServerError(&w, err) {
+	if checkerr.BadRequest(&w, err) {
 		return
 	}
 
-	if checkerr.BadRequest(&w, err) {
+	formFile, _, err = r.FormFile("file")
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 
