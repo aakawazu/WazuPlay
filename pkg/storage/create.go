@@ -11,7 +11,7 @@ import (
 
 // Create create new file
 func Create(rootFolderURI string) (*os.File, string, error) {
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb", rootFolderURI), nil)
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/file-path", rootFolderURI), nil)
 	defer db.Close()
 	if err != nil {
 		return nil, "", err

@@ -9,7 +9,7 @@ import (
 
 // Open open file
 func Open(rootFolderURI string, fileName string) (*os.File, error) {
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb", rootFolderURI), nil)
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/file-path", rootFolderURI), nil)
 	if err != nil {
 		return nil, err
 	}
