@@ -33,9 +33,6 @@ func Create(rootFolderURI string) (*os.File, string, error) {
 	}
 
 	numberOfFiles := len(fileList)
-	if err != nil {
-		return nil, "", err
-	}
 
 	if numberOfFiles > 50000 {
 		folderNameString, err := random.GenerateRandomString()
