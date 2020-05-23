@@ -35,9 +35,10 @@ func convertAudio(file multipart.File) (*os.File, error) {
 		return nil, err
 	}
 
-	tmpConvertedFileName += ".flac"
+	tmpFilePath := fmt.Sprintf("%s/tmp/%s", AudioFilesRoot, tmpFileName)
+	tmpConvertedFilePath := fmt.Sprintf("%s/tmp/%s.flac", AudioFilesRoot, tmpConvertedFileName)
 
-	f, err := os.Create(fmt.Sprintf("%s/tmp/%s", AudioFilesRoot, tmpFileName))
+	f, err := os.Create(tmpFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -47,10 +48,7 @@ func convertAudio(file multipart.File) (*os.File, error) {
 
 	trans := new(transcoder.Transcoder)
 
-	err = trans.Initialize(
-		fmt.Sprintf("%s/tmp/%s", AudioFilesRoot, tmpFileName),
-		fmt.Sprintf("%s/tmp/%s", AudioFilesRoot, tmpConvertedFileName),
-	)
+	err = trans.Initialize(tmpFilePath, tmpConvertedFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +60,16 @@ func convertAudio(file multipart.File) (*os.File, error) {
 		return nil, err
 	}
 
-	convertedFile, err := os.Open(fmt.Sprintf("%s/tmp/%s", AudioFilesRoot, tmpConvertedFileName))
+	convertedFile, err := os.Open(tmpConvertedFilePath)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := os.Remove(tmpFilePath); err != nil {
+		return nil, err
+	}
+
+	if err := os.Remove(tmpConvertedFilePath); err != nil {
 		return nil, err
 	}
 
@@ -103,7 +109,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer formFile.Close()
 
-	err = upload.CheckIfTheAllowedFileType(formFile, []string{"audio/mpeg", "audio/flac", "audio/wav"})
+	err = upload.CheckIfTheAllowedFileType(formFile, []string{
+		"audio/ogg", "audio/mpeg", "audio/flac", "audio/wav", "audio/aac", "audio/mp4", "audio/x-m4a", "video/mp4",
+	})
+
+	formFile, _, err = r.FormFile("file")
+	if checkerr.InternalServerError(&w, err) {
+		return
+	}
 
 	if checkerr.BadRequest(&w, err) {
 		return
