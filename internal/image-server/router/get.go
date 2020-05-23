@@ -1,13 +1,11 @@
 package router
 
 import (
-	"fmt"
 	"io"
 	"net/http"
-	"os"
 
-	"github.com/aakawazu/WazuPlay/pkg/checkerr"
 	"github.com/aakawazu/WazuPlay/pkg/httpstates"
+	"github.com/aakawazu/WazuPlay/pkg/storage"
 	"github.com/gorilla/mux"
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -19,14 +17,9 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/", ImageFilesRoot), nil)
-	if checkerr.InternalServerError(&w, err) {
-		return
-	}
-	defer db.Close()
-
 	fileName := mux.Vars(r)["id"]
-	folderName, err := db.Get([]byte(fileName), nil)
+
+	img, err := storage.Open(ImageFilesRoot, fileName)
 	if err != nil {
 		if err == leveldb.ErrNotFound {
 			httpstates.NotFound(&w)
@@ -35,7 +28,6 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 		httpstates.InternalServerError(&w)
 		return
 	}
-	img, err := os.Open(fmt.Sprintf("%s/files/%s/%s", ImageFilesRoot, folderName, fileName))
 
 	w.Header().Set("Content-Type", "image/jpeg")
 	io.Copy(w, img)
