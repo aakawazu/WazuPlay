@@ -9,7 +9,7 @@ import (
 
 // Open open file
 func Open(rootFolderURI string, fileName string) (*os.File, error) {
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/storage/leveldb/file-path", rootFolderURI), nil)
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/storage/leveldb", rootFolderURI), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +20,7 @@ func Open(rootFolderURI string, fileName string) (*os.File, error) {
 		return nil, err
 	}
 
-	file, err := os.Open(fmt.Sprintf("%s/files/%s/%s", rootFolderURI, folderName, fileName))
+	file, err := os.Open(fmt.Sprintf("%s/storage/files/%s/%s", rootFolderURI, folderName, fileName))
 	if err != nil {
 		return nil, err
 	}
