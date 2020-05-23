@@ -42,3 +42,5 @@ services:
             dockerfile: ./build/package/audio-server/Dockerfile
         environment: 
             VIRTUAL_HOST: audio.${DOMAIN}
+        volumes:
+            - ${SAVE_FOLDER}/audio:/wazuplay-files/audio
