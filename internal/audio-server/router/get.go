@@ -19,7 +19,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 
 	fileName := mux.Vars(r)["id"]
 
-	img, err := storage.Open(ImageFilesRoot, fileName)
+	audioFile, err := storage.Open(AudioFilesRoot, fileName)
 
 	switch err {
 	case nil:
@@ -29,8 +29,8 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 		httpstates.InternalServerError(&w)
 	}
 
-	defer img.Close()
+	defer audioFile.Close()
 
-	w.Header().Set("Content-Type", "image/jpeg")
-	io.Copy(w, img)
+	w.Header().Set("Content-Type", "audio/flac")
+	io.Copy(w, audioFile)
 }

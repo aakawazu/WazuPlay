@@ -15,6 +15,7 @@ func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/", IndexHandler)
 	router.HandleFunc("/upload", UploadHandler)
+	router.HandleFunc("/{id}", GetHandler)
 	return router
 }
 
