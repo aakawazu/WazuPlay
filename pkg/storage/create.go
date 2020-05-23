@@ -9,8 +9,9 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-func Create(rootFolderUri string) (*os.File, string, error) {
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb", rootFolderUri), nil)
+// Create create new file
+func Create(rootFolderURI string) (*os.File, string, error) {
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb", rootFolderURI), nil)
 	defer db.Close()
 	if err != nil {
 		return nil, "", err
@@ -26,7 +27,7 @@ func Create(rootFolderUri string) (*os.File, string, error) {
 		return nil, "", err
 	}
 
-	fileList, err := ioutil.ReadDir(fmt.Sprintf("%s/files/%s", rootFolderUri, folderName))
+	fileList, err := ioutil.ReadDir(fmt.Sprintf("%s/files/%s", rootFolderURI, folderName))
 	if err != nil {
 		return nil, "", err
 	}
@@ -44,7 +45,7 @@ func Create(rootFolderUri string) (*os.File, string, error) {
 
 		folderName = []byte(folderNameString)
 
-		err = os.MkdirAll(fmt.Sprintf("%s/files/%s", rootFolderUri, folderName), 0777)
+		err = os.MkdirAll(fmt.Sprintf("%s/files/%s", rootFolderURI, folderName), 0777)
 		if err != nil {
 			return nil, "", err
 		}
@@ -54,7 +55,7 @@ func Create(rootFolderUri string) (*os.File, string, error) {
 		}
 	}
 
-	file, err := os.Create(fmt.Sprintf("%s/files/%s/%s", rootFolderUri, folderName, fileName))
+	file, err := os.Create(fmt.Sprintf("%s/files/%s/%s", rootFolderURI, folderName, fileName))
 	if err != nil {
 		return nil, "", err
 	}
