@@ -7,6 +7,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AudioFilesRoot audio files root
+var AudioFilesRoot string = "/wazuplay-files/audio"
+
 // NewRouter audio server router
 func NewRouter() *mux.Router {
 	router := mux.NewRouter()
@@ -15,7 +18,7 @@ func NewRouter() *mux.Router {
 	return router
 }
 
-//IndexHandler /
+// IndexHandler /
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, Audio")
 }
