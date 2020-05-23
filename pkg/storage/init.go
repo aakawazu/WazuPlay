@@ -11,7 +11,7 @@ import (
 
 // Init init file storage
 func Init(rootFolderURI string) error {
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb/file-path", rootFolderURI), nil)
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/storage/leveldb/file-path", rootFolderURI), nil)
 	if err != nil {
 		return err
 	}
