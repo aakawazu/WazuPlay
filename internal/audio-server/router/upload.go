@@ -14,6 +14,7 @@ import (
 	"github.com/aakawazu/WazuPlay/pkg/random"
 	"github.com/aakawazu/WazuPlay/pkg/storage"
 	"github.com/aakawazu/WazuPlay/pkg/token"
+	"github.com/aakawazu/WazuPlay/pkg/upload"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/xfrr/goffmpeg/transcoder"
 )
@@ -101,6 +102,12 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer formFile.Close()
+
+	err = upload.CheckIfTheAllowedFileType(formFile, []string{"audio/mpeg", "audio/flac", "audio/wav"})
+
+	if checkerr.BadRequest(&w, err) {
+		return
+	}
 
 	convertedAudio, err := convertAudio(formFile)
 	if checkerr.InternalServerError(&w, err) {
