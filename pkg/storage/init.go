@@ -9,12 +9,13 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-func Init(rootFolderUri string) error {
-	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb", rootFolderUri), nil)
-	defer db.Close()
+// Init init file storage
+func Init(rootFolderURI string) error {
+	db, err := leveldb.OpenFile(fmt.Sprintf("%s/leveldb", rootFolderURI), nil)
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 
 	if _, err := db.Get([]byte("latest_folder"), nil); err != nil {
 		if err != leveldb.ErrNotFound {
@@ -26,7 +27,7 @@ func Init(rootFolderUri string) error {
 			return err
 		}
 
-		err = os.MkdirAll(fmt.Sprintf("%s/files/%s", rootFolderUri, folderName), 0777)
+		err = os.MkdirAll(fmt.Sprintf("%s/files/%s", rootFolderURI, folderName), 0777)
 		if err != nil {
 			return err
 		}
