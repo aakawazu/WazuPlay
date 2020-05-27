@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: generate .env
-      run: echo -e "HOSTNAME=localhost\nDBPASSWORD=test\nSMTP_PASSWORD=test" > .env
+    - uses: actions/checkout@v2 
     - name: Build the Docker image
-      run: docker-compose -f ./docker-compose.yml build
+      run: echo -e "HOSTNAME=localhost\nDBPASSWORD=test\nSMTP_PASSWORD=test" > .env;docker-compose -f ./docker-compose.yml build
