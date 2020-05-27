@@ -31,6 +31,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer audioFile.Close()
 
-	w.Header().Set("Content-Type", "audio/flac")
+	w.Header().Set("Content-Type", "audio/x-flac")
+
 	io.Copy(w, audioFile)
 }
