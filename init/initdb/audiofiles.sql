@@ -1,8 +1,8 @@
 create table audiofiles (
     id          text,
-    audio_owner text,
-    album       text,
+    file_owner  text,
     title       text,
     artist      text,
+    album       text,
     instrument  boolean
 )
