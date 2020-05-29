@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/aakawazu/WazuPlay/pkg/checkerr"
 	"github.com/aakawazu/WazuPlay/pkg/db"
@@ -92,6 +93,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(32 << 20)
 
 	accessToken := db.EscapeSinglequotation(r.FormValue("token"))
+	album := db.EscapeSinglequotation(r.FormValue("album"))
+	title := db.EscapeSinglequotation(r.FormValue("title"))
+	artist := db.EscapeSinglequotation(r.FormValue("artist"))
+	instrument, err := strconv.ParseBool(r.FormValue("instrument"))
+
+	if checkerr.BadRequest(&w, err) {
+		return
+	}
 
 	userID, err := token.VerificationAccessToken(accessToken)
 
@@ -131,7 +140,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := owners.Put([]byte(audioID), []byte(userID), nil); checkerr.InternalServerError(&w, err) {
+	_, err = db.RunSQL(fmt.Sprintf(
+		"INSERT INTO audio_files (id, file_owner, album, title, artist, instrument) VALUES (%s, %s, %s, %s, %s, %s)",
+		audioID, userID, album, title, artist, strconv.FormatBool(instrument),
+	))
+	if checkerr.InternalServerError(&w, err) {
 		return
 	}
 
