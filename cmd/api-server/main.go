@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	apiServer "github.com/aakawazu/WazuPlay/internal/api-server/router"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "hello, api-server")
-	})
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	router := apiServer.NewRouter()
+	fmt.Println("hello, API")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
