@@ -13,7 +13,7 @@ func NewRouter() *mux.Router {
 	router.HandleFunc("/", IndexHandler)
 	// router.HandleFunc("/album/register", RegisterAlbumHandler)
 	router.HandleFunc("/album/list", AlbumListHandler)
-	// router.HandleFunc("/album/{id}", AlbumInfoHandler)
+	router.HandleFunc("/album/{id}", AlbumInfoHandler)
 	// router.HandleFunc("/music/{id}", MusicInfoHandler)
 	return router
 }
