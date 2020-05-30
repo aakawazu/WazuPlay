@@ -60,7 +60,7 @@ func AlbumListHandler(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		rows.Scan(&albumID, &title, &artist, &albumPictureURL)
-		fmt.Printf(albumID)
+
 		res = append(res, AlbumListResponse{
 			ID:              albumID,
 			Title:           title,
