@@ -29,7 +29,7 @@ func AlbumListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken := db.EscapeSinglequotation(r.Header.Get("token"))
+	accessToken := db.EscapeSinglequotation(r.URL.Query().Get("token"))
 
 	if accessToken == "" {
 		httpstates.BadRequest(&w)
