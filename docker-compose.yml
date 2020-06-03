@@ -28,6 +28,12 @@ services:
             dockerfile: ./build/package/oauth-server/Dockerfile
         environment: 
             VIRTUAL_HOST: oauth.${DOMAIN}
+    api-server:
+        build:
+            context: ./
+            dockerfile: ./build/package/api-server/Dockerfile
+        environment: 
+            VIRTUAL_HOST: api.${DOMAIN}
     image-server:
         build:
             context: ./
