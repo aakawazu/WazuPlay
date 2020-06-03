@@ -37,8 +37,12 @@ func AlbumListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID, err := token.VerificationAccessToken(accessToken)
-	if checkerr.BadRequest(&w, err) {
-		return
+	switch err {
+	case nil:
+	case token.ErrTokenNotfound:
+		httpstates.BadRequest(&w)
+	default:
+		httpstates.InternalServerError(&w)
 	}
 
 	rows, err := db.RunSQL(fmt.Sprintf(
