@@ -21,13 +21,14 @@ type TokenRequest struct {
 
 // TokenResponse token response struct
 type TokenResponse struct {
+	UserName     string `json:"user_name"`
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-func generateTokenResponse(id string) ([]byte, error) {
+func generateTokenResponse(id string, userName string) ([]byte, error) {
 	accessToken, err := random.GenerateRandomString()
 	if err != nil {
 		return nil, err
@@ -52,6 +53,7 @@ func generateTokenResponse(id string) ([]byte, error) {
 	}
 
 	res := TokenResponse{
+		UserName:     userName,
 		AccessToken:  accessToken,
 		TokenType:    "Bearer",
 		ExpiresIn:    3600,
@@ -94,7 +96,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		rows, err := db.RunSQL(fmt.Sprintf(
-			"SELECT DISTINCT user_id, hashed_password FROM users WHERE mail_address = '%s'",
+			"SELECT DISTINCT user_id, user_name, hashed_password FROM users WHERE mail_address = '%s'",
 			mailaddress,
 		))
 		defer rows.Close()
@@ -103,9 +105,10 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var id string
+		var userName string
 		var hashedPassword string
 		for rows.Next() {
-			rows.Scan(&id, &hashedPassword)
+			rows.Scan(&id, &userName, &hashedPassword)
 		}
 
 		if id == "" || hashedPassword == "" {
@@ -117,7 +120,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resjson, err = generateTokenResponse(id)
+		resjson, err = generateTokenResponse(id, userName)
 		if checkerr.InternalServerError(&w, err) {
 			return
 		}
@@ -125,7 +128,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	} else if grantType == "refresh_token" {
 		refreshToken := db.EscapeSinglequotation(r.FormValue("refresh_token"))
 		rows, err := db.RunSQL(fmt.Sprintf(
-			"SELECT DISTINCT user_id FROM refresh_token WHERE token = '%s'",
+			"SELECT DISTINCT user_id, user_name FROM refresh_token WHERE token = '%s'",
 			refreshToken,
 		))
 		defer rows.Close()
@@ -134,16 +137,18 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var id string
+		var userName string
+
 		for rows.Next() {
-			rows.Scan(&id)
+			rows.Scan(&id, &userName)
 		}
 
-		if id == "" {
+		if id == "" || userName == "" {
 			httpstates.BadRequest(&w)
 			return
 		}
 
-		resjson, err = generateTokenResponse(id)
+		resjson, err = generateTokenResponse(id, userName)
 		if checkerr.InternalServerError(&w, err) {
 			return
 		}
