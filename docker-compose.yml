@@ -20,7 +20,7 @@ services:
     mail:
         image: catatnight/postfix
         environment: 
-            maildomain: ${HOSTNAME}
+            maildomain: ${DOMAIN}
             smtp_user: wazuplay:${SMTP_PASSWORD}
     oauth-server:
         build:
