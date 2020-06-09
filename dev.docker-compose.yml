@@ -7,7 +7,7 @@ services:
         tty: true
         volumes:
             - .:/workspace:cached
-            - ${SAVE_FOLDER}/.dev:/wazuplay-files
+            - ${SAVE_FOLDER}:/wazuplay-files
         ports:
             - "8080:8080"
     pgweb:
